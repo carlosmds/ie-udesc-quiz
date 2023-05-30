@@ -135,6 +135,141 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
+class QuestionCard extends StatefulWidget {
+  QuestionCard(
+      {super.key,
+      required this.question,
+      required this.updateQuestion,
+      required this.removeQuestion});
+  Question question;
+  final void Function(Question) updateQuestion;
+  final void Function() removeQuestion;
+  @override
+  State<QuestionCard> createState() => _QuestionCardState();
+}
+
+class _QuestionCardState extends State<QuestionCard> {
+  late TextEditingController _titleController;
+  late TextEditingController _descriptionController;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.question.title);
+    _descriptionController =
+        TextEditingController(text: widget.question.description);
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+        child: Column(children: [
+      Flexible(
+          flex: 10,
+          child: Column(
+            children: [
+              const Text("Titulo"),
+              TextField(
+                // CONTROLLER BUGADO
+                controller: _titleController,
+                onChanged: (value) {
+                  widget.question.title = value;
+                  widget.updateQuestion(widget.question);
+                },
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'Título da Questão',
+                ),
+              ),
+              const Text("Descrição"),
+              TextField(
+                controller: _descriptionController,
+                onChanged: (value) {
+                  widget.question.description = value;
+                  widget.updateQuestion(widget.question);
+                },
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'Descrição da Questão',
+                ),
+              ),
+              const Text("Opções"),
+            ],
+          )),
+      Flexible(
+          flex: 12,
+          child: SingleChildScrollView(
+              child: Column(
+                  children: List.generate(widget.question.options.length,
+                      (optionIndex) {
+            var optionNumber = optionIndex + 1;
+            return Row(
+              children: [
+                Text("Opção $optionNumber"),
+                Expanded(
+                  child: TextField(
+                    controller: TextEditingController(
+                        text: widget.question.options[optionIndex].title),
+                    onChanged: (value) {
+                      widget.question.options[optionIndex].title = value;
+                      widget.updateQuestion(widget.question);
+                    },
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      hintText: 'Opção',
+                    ),
+                  ),
+                ),
+                Checkbox(
+                  value: widget.question.options[optionIndex].answer,
+                  onChanged: (value) {
+                    widget.question.options[optionIndex].answer =
+                        value ?? false;
+                    widget.updateQuestion(widget.question);
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete),
+                  onPressed: () {
+                    widget.question.options.removeAt(optionIndex);
+                    widget.updateQuestion(widget.question);
+                  },
+                ),
+              ],
+            );
+          })))),
+      Flexible(
+          flex: 2,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  widget.question.options.add(Option(
+                    title: "New Option",
+                    answer: false,
+                  ));
+                  widget.updateQuestion(widget.question);
+                },
+                child: const Icon(Icons.add),
+              ),
+              IconButton(
+                icon: const Icon(Icons.delete),
+                onPressed: () => widget.removeQuestion(),
+              ),
+            ],
+          ))
+    ]));
+  }
+}
+
 class ConfigureQuizPage extends StatefulWidget {
   ConfigureQuizPage({super.key, this.quiz, required this.db});
   Quiz? quiz;
@@ -147,7 +282,8 @@ class _ConfigureQuizPageState extends State<ConfigureQuizPage> {
   final Quiz _new_quiz = Quiz(
     title: "New Quiz",
     image:
-        "https://media.licdn.com/dms/image/C4D12AQF2HyN6MILFGw/article-cover_image-shrink_720_1280/0/1646657644961?e=2147483647&v=beta&t=O7HBRXmp-4I1vnw3p8_2THSzNzPtA7cS76_5yrCfZrY",
+        "https://st.depositphotos.com/2398521/2608/i/600/depositphotos_26089317-stock-photo-cute-small-dog.jpg",
+    // "https://media.licdn.com/dms/image/C4D12AQF2HyN6MILFGw/article-cover_image-shrink_720_1280/0/1646657644961?e=2147483647&v=beta&t=O7HBRXmp-4I1vnw3p8_2THSzNzPtA7cS76_5yrCfZrY",
     description: "test",
     questions: [
       Question(
@@ -191,45 +327,69 @@ class _ConfigureQuizPageState extends State<ConfigureQuizPage> {
       body: Center(
         child: Column(
           children: [
-            Row(
-              children: [
-                const Text("Titulo"),
-                Expanded(
-                  child: TextField(
-                    controller: _titleController,
-                    onChanged: (value) {
-                      setState(() {
-                        _new_quiz_tmp?.title = value;
-                      });
-                    },
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: 'Título do Quiz',
+            Flexible(
+                flex: 4,
+                child: SingleChildScrollView(
+                    child: Column(
+                  children: [
+                    const Text("Titulo"),
+                    SizedBox(
+                      width: 480,
+                      child: TextField(
+                        maxLength: 50,
+                        textAlign: TextAlign.center,
+                        controller: _titleController,
+                        onChanged: (value) {
+                          setState(() {
+                            _new_quiz_tmp?.title = value;
+                          });
+                        },
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          hintText: 'Título do Quiz',
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ],
-            ),
-            Row(
-              children: [
-                const Text("Descrição"),
-                Expanded(
-                  child: TextField(
-                    controller: _descriptionController,
-                    onChanged: (value) {
-                      setState(() {
-                        _new_quiz_tmp?.description = value;
-                      });
-                    },
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: 'Descrição do Quiz',
+                    const Text("Descrição"),
+                    SizedBox(
+                      width: 842,
+                      child: TextField(
+                        maxLength: 200,
+                        textAlign: TextAlign.center,
+                        minLines: 1,
+                        maxLines: 10,
+                        controller: _descriptionController,
+                        onChanged: (value) {
+                          setState(() {
+                            _new_quiz_tmp?.description = value;
+                          });
+                        },
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          hintText: 'Descrição do Quiz',
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-              ],
-            ),
-            // TODO: Add image
+                    const Text("URL de Imagem"),
+                    SizedBox(
+                      width: 842,
+                      child: TextField(
+                        maxLength: 500,
+                        controller: _imageController,
+                        onChanged: (value) {
+                          setState(() {
+                            _new_quiz_tmp?.image = value;
+                          });
+                        },
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          hintText: 'Descrição do Quiz',
+                        ),
+                      ),
+                    ),
+                  ],
+                ))),
+
             // The questions of the quiz are added/edited in the same quiz. Each question is displayed in a card.
             // Each card with a question should have a title, a description, and a list of options.
             // The user can add more options by clicking on a "+" button in the bottom of the card.
@@ -237,175 +397,278 @@ class _ConfigureQuizPageState extends State<ConfigureQuizPage> {
             // Each option should have two buttons, one is a check mark to select the correct option. The other is a "X" to delete the option.
             // There should have a blank card to add new questions to the quiz, and has a button of a "+" icon in the center of the card.
             // When the user clicks on the "+" button, a new card with a empty question title/description and two default options.
-            GridView.builder(
-                shrinkWrap: true,
-                itemCount: ((_new_quiz_tmp?.questions.length ?? 0) + 1),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 3, childAspectRatio: 1),
-                itemBuilder: (context, index) {
-                  if (index == _new_quiz_tmp?.questions.length) {
-                    return ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          _new_quiz_tmp?.questions.add(Question(
-                            title: "New Question",
-                            description: "Describe you question",
-                            options: [
-                              Option(title: "1", answer: true),
-                              Option(title: "2", answer: false),
-                            ],
-                          ));
-                        });
-                      },
-                      child: const Icon(Icons.add),
-                    );
-                  }
+            Flexible(
+                flex: 7,
+                child: GridView.builder(
+                    // shrinkWrap: true,
+                    // scrollDirection: Axis.horizontal,
+                    itemCount: ((_new_quiz_tmp?.questions.length ?? 0) + 1),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisSpacing: 2,
+                            crossAxisCount: 4,
+                            childAspectRatio: 0.7),
+                    itemBuilder: (context, index) {
+                      if (index == _new_quiz_tmp?.questions.length) {
+                        return Card(
+                            child: ElevatedButton(
+                          // rectangle shaped button
+                          style: ElevatedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10.0)),
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _new_quiz_tmp?.questions.add(Question(
+                                title: "New Question",
+                                description: "Describe you question",
+                                options: [
+                                  Option(title: "1", answer: true),
+                                  Option(title: "2", answer: false),
+                                ],
+                              ));
+                            });
+                          },
+                          child: const Icon(Icons.add),
+                        ));
+                      }
 
-                  // Each card with a question should have a title, a description, and a list of options.
-                  // The user can add more options by clicking on a "+" button in the bottom of the card.
-                  // There should be a "X" on the top-right corner to remove the question.
-                  // Each option should have two buttons, one is a check mark to select the correct option. The other is a "X" to delete the option.
-                  return Card(
-                      child: Column(children: [
-                    Row(
-                      children: [
-                        const Text("Titulo"),
-                        Expanded(
-                          child: TextField(
-                            controller: TextEditingController(
-                                text: _new_quiz_tmp?.questions[index].title),
-                            onChanged: (value) {
-                              setState(() {
-                                _new_quiz_tmp?.questions[index].title = value;
-                              });
-                            },
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                              hintText: 'Título da Questão',
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        const Text("Descrição"),
-                        Expanded(
-                          child: TextField(
-                            controller: TextEditingController(
-                                text: _new_quiz_tmp
-                                    ?.questions[index].description),
-                            onChanged: (value) {
-                              setState(() {
-                                _new_quiz_tmp?.questions[index].description =
-                                    value;
-                              });
-                            },
-                            decoration: const InputDecoration(
-                              border: OutlineInputBorder(),
-                              hintText: 'Descrição da Questão',
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    Column(
-                        children: List.generate(
-                            _new_quiz_tmp?.questions[index].options.length ?? 0,
-                            (option_index) {
-                      return Row(
-                        children: [
-                          const Text("Opção"),
-                          Expanded(
-                            child: TextField(
-                              controller: TextEditingController(
-                                  text: _new_quiz_tmp?.questions[index]
-                                      .options[option_index].title),
-                              onChanged: (value) {
-                                setState(() {
-                                  _new_quiz_tmp?.questions[index]
-                                      .options[option_index].title = value;
-                                });
-                              },
-                              decoration: const InputDecoration(
-                                border: OutlineInputBorder(),
-                                hintText: 'Opção',
-                              ),
-                            ),
-                          ),
-                          Checkbox(
-                            value: _new_quiz_tmp
-                                ?.questions[index].options[option_index].answer,
-                            onChanged: (value) {
-                              setState(() {
-                                _new_quiz_tmp
-                                    ?.questions[index]
-                                    .options[option_index]
-                                    .answer = value ?? false;
-                              });
-                            },
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.delete),
-                            onPressed: () {
-                              setState(() {
-                                _new_quiz_tmp?.questions[index].options
-                                    .removeAt(option_index);
-                              });
-                            },
-                          ),
-                        ],
-                      );
+                      // Each card with a question should have a title, a description, and a list of options.
+                      // The user can add more options by clicking on a "+" button in the bottom of the card.
+                      // There should be a "X" on the top-right corner to remove the question.
+                      // Each option should have two buttons, one is a check mark to select the correct option. The other is a "X" to delete the option.
+                      return QuestionCard(
+                          question: _new_quiz_tmp!.questions[index],
+                          removeQuestion: () {
+                            setState(() {
+                              _new_quiz_tmp?.questions.removeAt(index);
+                            });
+                          },
+                          updateQuestion: (Question question) {
+                            setState(() {
+                              _new_quiz_tmp?.questions[index] = question;
+                            });
+                          });
+
+                      // create a red container for testing
+                      // return Container(
+                      //   margin: const EdgeInsets.all(10),
+                      //   color: Colors.red,
+                      // );
                     })),
-                    ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          _new_quiz_tmp?.questions[index].options.add(Option(
-                            title: "New Option",
-                            answer: false,
-                          ));
-                        });
-                      },
-                      child: const Icon(Icons.add),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete),
-                      onPressed: () {
-                        setState(() {
-                          _new_quiz_tmp?.questions.removeAt(index);
-                        });
-                      },
-                    ),
-                  ]));
-
-                  // create a red container for testing
-                  // return Container(
-                  //   margin: const EdgeInsets.all(10),
-                  //   color: Colors.red,
-                  // );
-                }),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text("Cancelar"),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      widget.db.push().set(jsonEncode(_new_quiz_tmp));
-                    });
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text("Salvar"),
-                ),
-              ],
-            ),
+            Flexible(
+              flex: 1,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text("Cancelar"),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        widget.db.push().set(jsonEncode(_new_quiz_tmp));
+                      });
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text("Salvar"),
+                  ),
+                ],
+              ),
+            )
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _QuizAnswerPage extends StatefulWidget {
+  _QuizAnswerPage({super.key, required this.quiz});
+  Quiz quiz;
+  @override
+  _QuizAnswerPageState createState() => _QuizAnswerPageState();
+}
+
+class _QuizAnswerPageState extends State<_QuizAnswerPage> {
+  List<int> answers = List.empty(growable: true);
+
+  void _pushSendAnswers(Quiz quiz, List<int> answers) {
+    //calculate how many answers are correct
+    int correctAnswers = 0;
+    for (var i = 0; i < quiz.questions.length; i++) {
+      // check if selected option is equal to selected answer
+      for (var j = 0; j < quiz.questions[i].options.length; j++) {
+        if (answers[i] == j && quiz.questions[i].options[j].answer) {
+          correctAnswers++;
+        }
+      }
+    }
+    showModalBottomSheet(
+        context: context,
+        builder: (context) => Expanded(
+                child: Column(
+              children: [
+                Container(
+                    margin: const EdgeInsets.all(10),
+                    child: const Text("Respostas")),
+                Container(
+                    margin: const EdgeInsets.all(10),
+                    child: Text(
+                        "Você acertou $correctAnswers de ${quiz.questions.length}",
+                        style: Theme.of(context).textTheme.titleLarge)),
+                Container(
+                    margin: const EdgeInsets.all(10),
+                    child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text("Voltar"))),
+              ],
+            )));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (answers.isEmpty) {
+      answers.addAll(List.filled(widget.quiz.questions.length, -1));
+    }
+    return Scaffold(
+        appBar: AppBar(
+          backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+          title: Text(widget.quiz.title),
+          centerTitle: true,
+          leading: IconButton(
+            alignment: Alignment.centerLeft,
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => {
+              Navigator.pop(context),
+            },
+            tooltip: 'Back',
+          ),
+        ),
+        // The following container should display the quiz and its questions.
+        // The quiz should have a title and description.
+        // The following container should display the questions of the quiz in a for loop.
+        // The questions should have a title and description.
+        // The questions should have a list of options to choose from. The user should be able to select only one option.
+        body: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    SizedBox(
+                      height: 700,
+                      child: ListView.builder(
+                        itemCount: widget.quiz.questions.length,
+                        itemBuilder: (context, questionIndex) {
+                          // SEPARAR ISSO EM UM WIDGET E VALIDAR FUNCIONAMENTO.
+                          return _QuestionSelectOptionWidget(
+                              question: widget.quiz.questions[questionIndex],
+                              setAnswer: (answerValue) {
+                                setState(() {
+                                  answers[questionIndex] = answerValue;
+                                });
+                                print(answers);
+                              });
+                        },
+                      ),
+                    ),
+                    Container(
+                        margin: const EdgeInsets.all(10),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                              child: const Text("Voltar"),
+                            ),
+                            ElevatedButton(
+                              onPressed: () =>
+                                  _pushSendAnswers(widget.quiz, answers),
+                              child: const Text("Enviar"),
+                            ),
+                          ],
+                        )),
+                  ],
+                ),
+              ),
+            )
+          ],
+        ));
+  }
+}
+
+class _QuestionSelectOptionWidget extends StatefulWidget {
+  _QuestionSelectOptionWidget(
+      {super.key, required this.question, required this.setAnswer});
+  Question question;
+  Function setAnswer;
+  @override
+  _QuestionSelectOptionWidgetState createState() =>
+      _QuestionSelectOptionWidgetState();
+}
+
+class _QuestionSelectOptionWidgetState
+    extends State<_QuestionSelectOptionWidget> {
+  int? currentAnswer;
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(10),
+      // height: 100,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.5),
+            spreadRadius: 1,
+            blurRadius: 5,
+            offset: const Offset(0, 3), // changes position of shadow
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Text(
+            widget.question.title,
+            style: Theme.of(context).textTheme.headlineMedium,
+          ),
+          Text(
+            widget.question.description,
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          Text(
+            widget.question.options[currentAnswer ?? 0].title,
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
+          Column(
+              children: List.generate(
+                  widget.question.options.length,
+                  (optionIndex) => RadioListTile(
+                        title: Text(
+                          widget.question.options[optionIndex].title,
+                          style: Theme.of(context).textTheme.bodyLarge,
+                        ),
+                        value: optionIndex,
+                        groupValue: currentAnswer,
+                        onChanged: (value) {
+                          widget.setAnswer(value);
+                          setState(() {
+                            currentAnswer = value!;
+                          });
+                          print(currentAnswer);
+                        },
+                      )))
+        ],
       ),
     );
   }
@@ -610,115 +873,15 @@ class _MyHomePageState extends State<MyHomePage> {
                   (index) {
                     Quiz quiz = Quiz.fromJson(
                         jsonDecode(quizData.values.elementAt(index)));
+
                     return GestureDetector(
-                        onTap: () => {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => Scaffold(
-                                          appBar: AppBar(
-                                            backgroundColor: Theme.of(context)
-                                                .colorScheme
-                                                .inversePrimary,
-                                            title: Text(quiz.title),
-                                            centerTitle: true,
-                                            leading: IconButton(
-                                              alignment: Alignment.centerLeft,
-                                              icon:
-                                                  const Icon(Icons.arrow_back),
-                                              onPressed: () => {
-                                                Navigator.pop(context),
-                                              },
-                                              tooltip: 'Back',
-                                            ),
-                                          ),
-                                          // The following container should display the quiz and its questions.
-                                          // The quiz should have a title and description.
-                                          // The following container should display the questions of the quiz in a for loop.
-                                          // The questions should have a title and description.
-                                          // The questions should have a list of options to choose from. The user should be able to select only one option.
-                                          body: ListView.builder(
-                                            itemCount: quiz.questions.length,
-                                            itemBuilder:
-                                                (context, questionIndex) {
-                                              return Container(
-                                                margin:
-                                                    const EdgeInsets.all(10),
-                                                padding:
-                                                    const EdgeInsets.all(10),
-                                                // height: 100,
-                                                decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.circular(10),
-                                                  color: Colors.white,
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      color: Colors.grey
-                                                          .withOpacity(0.5),
-                                                      spreadRadius: 1,
-                                                      blurRadius: 5,
-                                                      offset: const Offset(0,
-                                                          3), // changes position of shadow
-                                                    ),
-                                                  ],
-                                                ),
-                                                child: Column(
-                                                  children: [
-                                                    Text(
-                                                      quiz
-                                                          .questions[
-                                                              questionIndex]
-                                                          .title,
-                                                      style: Theme.of(context)
-                                                          .textTheme
-                                                          .headlineMedium,
-                                                    ),
-                                                    Text(
-                                                      quiz
-                                                          .questions[
-                                                              questionIndex]
-                                                          .description,
-                                                      style: Theme.of(context)
-                                                          .textTheme
-                                                          .bodyLarge,
-                                                    ),
-                                                    Column(
-                                                        children: List.generate(
-                                                            quiz
-                                                                .questions[
-                                                                    questionIndex]
-                                                                .options
-                                                                .length,
-                                                            (optionIndex) =>
-                                                                RadioListTile(
-                                                                  title: Text(
-                                                                    quiz
-                                                                        .questions[
-                                                                            questionIndex]
-                                                                        .options[
-                                                                            optionIndex]
-                                                                        .title,
-                                                                    style: Theme.of(
-                                                                            context)
-                                                                        .textTheme
-                                                                        .bodyLarge,
-                                                                  ),
-                                                                  value:
-                                                                      optionIndex,
-                                                                  groupValue:
-                                                                      true,
-                                                                  onChanged:
-                                                                      (value) =>
-                                                                          {},
-                                                                )))
-                                                  ],
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                        )),
+                        onTap: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    _QuizAnswerPage(quiz: quiz),
                               ),
-                            },
+                            ),
                         child: Container(
                             margin: const EdgeInsets.all(10),
                             padding: const EdgeInsets.all(10),
