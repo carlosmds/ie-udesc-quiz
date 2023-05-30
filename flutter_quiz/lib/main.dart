@@ -507,9 +507,10 @@ class _QuizAnswerPageState extends State<_QuizAnswerPage> {
         }
       }
     }
-    showModalBottomSheet(
-        context: context,
-        builder: (context) => Expanded(
+    // showModalBottomSheet(
+    // context: context,
+    Navigator.of(context).push(MaterialPageRoute<void>(
+        builder: (BuildContext context) => Expanded(
                 child: Column(
               children: [
                 Container(
@@ -528,7 +529,7 @@ class _QuizAnswerPageState extends State<_QuizAnswerPage> {
                         },
                         child: const Text("Voltar"))),
               ],
-            )));
+            ))));
   }
 
   @override
