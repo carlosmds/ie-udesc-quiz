@@ -519,15 +519,15 @@ class _QuizAnswerPageState extends State<_QuizAnswerPage> {
                     child: Column(
               children: [
                 Container(
-                    margin: const EdgeInsets.all(10),
+                    
                     child: const Text("Respostas enviadas com sucesso!")),
                 Container(
-                    margin: const EdgeInsets.all(10),
+                   
                     child: Text(
                         "Você acertou $correctAnswers de ${quiz.questions.length}",
                         style: Theme.of(context).textTheme.titleLarge)),
                 Container(
-                    margin: const EdgeInsets.all(10),
+                   
                     child: ElevatedButton(
                         onPressed: () {
                           Navigator.of(context).pop();
