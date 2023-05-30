@@ -515,7 +515,7 @@ class _QuizAnswerPageState extends State<_QuizAnswerPage> {
               title: const Text("Respostas"),
             ),
             body: Center(
-                child: Expanded(
+                
                     child: Column(
               children: [
                 Container(
@@ -534,7 +534,7 @@ class _QuizAnswerPageState extends State<_QuizAnswerPage> {
                         },
                         child: const Text("Voltar"))),
               ],
-            ))))));
+            )))));
   }
 
   @override
