@@ -510,12 +510,17 @@ class _QuizAnswerPageState extends State<_QuizAnswerPage> {
     // showModalBottomSheet(
     // context: context,
     Navigator.of(context).push(MaterialPageRoute<void>(
-        builder: (BuildContext context) => Expanded(
-                child: Column(
+        builder: (BuildContext context) => Scaffold(
+            appBar: AppBar(
+              title: const Text("Respostas"),
+            ),
+            body: Center(
+                child: Expanded(
+                    child: Column(
               children: [
                 Container(
                     margin: const EdgeInsets.all(10),
-                    child: const Text("Respostas")),
+                    child: const Text("Respostas enviadas com sucesso!")),
                 Container(
                     margin: const EdgeInsets.all(10),
                     child: Text(
@@ -529,7 +534,7 @@ class _QuizAnswerPageState extends State<_QuizAnswerPage> {
                         },
                         child: const Text("Voltar"))),
               ],
-            ))));
+            ))))));
   }
 
   @override
