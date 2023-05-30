@@ -295,7 +295,6 @@ class _ConfigureQuizPageState extends State<ConfigureQuizPage> {
           ])
     ],
   );
-  Quiz? _new_quiz_tmp;
 
   late TextEditingController _titleController;
   late TextEditingController _descriptionController;
@@ -319,7 +318,7 @@ class _ConfigureQuizPageState extends State<ConfigureQuizPage> {
 
   @override
   Widget build(BuildContext context) {
-    _new_quiz_tmp = widget.quiz ?? _new_quiz;
+    var newQuizTmp = widget.quiz ?? _new_quiz;
     return Scaffold(
       appBar: AppBar(
         title: const Text("Adicionar Quiz"),
@@ -341,7 +340,7 @@ class _ConfigureQuizPageState extends State<ConfigureQuizPage> {
                         controller: _titleController,
                         onChanged: (value) {
                           setState(() {
-                            _new_quiz_tmp?.title = value;
+                            newQuizTmp.title = value;
                           });
                         },
                         decoration: const InputDecoration(
@@ -361,7 +360,7 @@ class _ConfigureQuizPageState extends State<ConfigureQuizPage> {
                         controller: _descriptionController,
                         onChanged: (value) {
                           setState(() {
-                            _new_quiz_tmp?.description = value;
+                            newQuizTmp.description = value;
                           });
                         },
                         decoration: const InputDecoration(
@@ -378,7 +377,7 @@ class _ConfigureQuizPageState extends State<ConfigureQuizPage> {
                         controller: _imageController,
                         onChanged: (value) {
                           setState(() {
-                            _new_quiz_tmp?.image = value;
+                            newQuizTmp.image = value;
                           });
                         },
                         decoration: const InputDecoration(
@@ -402,14 +401,14 @@ class _ConfigureQuizPageState extends State<ConfigureQuizPage> {
                 child: GridView.builder(
                     // shrinkWrap: true,
                     // scrollDirection: Axis.horizontal,
-                    itemCount: ((_new_quiz_tmp?.questions.length ?? 0) + 1),
+                    itemCount: ((newQuizTmp.questions.length) + 1),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                             crossAxisSpacing: 2,
                             crossAxisCount: 4,
-                            childAspectRatio: 0.7),
+                            childAspectRatio: 1),
                     itemBuilder: (context, index) {
-                      if (index == _new_quiz_tmp?.questions.length) {
+                      if (index == newQuizTmp.questions.length) {
                         return Card(
                             child: ElevatedButton(
                           // rectangle shaped button
@@ -419,7 +418,7 @@ class _ConfigureQuizPageState extends State<ConfigureQuizPage> {
                           ),
                           onPressed: () {
                             setState(() {
-                              _new_quiz_tmp?.questions.add(Question(
+                              newQuizTmp.questions.add(Question(
                                 title: "New Question",
                                 description: "Describe you question",
                                 options: [
@@ -438,15 +437,15 @@ class _ConfigureQuizPageState extends State<ConfigureQuizPage> {
                       // There should be a "X" on the top-right corner to remove the question.
                       // Each option should have two buttons, one is a check mark to select the correct option. The other is a "X" to delete the option.
                       return QuestionCard(
-                          question: _new_quiz_tmp!.questions[index],
+                          question: newQuizTmp.questions[index],
                           removeQuestion: () {
                             setState(() {
-                              _new_quiz_tmp?.questions.removeAt(index);
+                              newQuizTmp.questions.removeAt(index);
                             });
                           },
                           updateQuestion: (Question question) {
                             setState(() {
-                              _new_quiz_tmp?.questions[index] = question;
+                              newQuizTmp.questions[index] = question;
                             });
                           });
 
@@ -458,26 +457,29 @@ class _ConfigureQuizPageState extends State<ConfigureQuizPage> {
                     })),
             Flexible(
               flex: 1,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text("Cancelar"),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        widget.db.push().set(jsonEncode(_new_quiz_tmp));
-                      });
-                      Navigator.of(context).pop();
-                    },
-                    child: const Text("Salvar"),
-                  ),
-                ],
-              ),
+              child: Container(
+                  margin: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text("Cancelar"),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            widget.db.push().set(jsonEncode(newQuizTmp));
+                          });
+                          Navigator.of(context).pop();
+                        },
+                        child: const Text("Salvar"),
+                      ),
+                    ],
+                  )),
             )
           ],
         ),
@@ -515,24 +517,16 @@ class _QuizAnswerPageState extends State<_QuizAnswerPage> {
               title: const Text("Respostas"),
             ),
             body: Center(
-                
-                    child: Column(
+                child: Column(
               children: [
-                Container(
-                    
-                    child: const Text("Respostas enviadas com sucesso!")),
-                Container(
-                   
-                    child: Text(
-                        "Você acertou $correctAnswers de ${quiz.questions.length}",
-                        style: Theme.of(context).textTheme.titleLarge)),
-                Container(
-                   
-                    child: ElevatedButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        child: const Text("Voltar"))),
+                const Text("Respostas enviadas com sucesso!"),
+                Text("Você acertou $correctAnswers de ${quiz.questions.length}",
+                    style: Theme.of(context).textTheme.titleLarge),
+                ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text("Voltar")),
               ],
             )))));
   }
@@ -669,7 +663,7 @@ class _QuestionSelectOptionWidgetState
                         onChanged: (value) {
                           widget.setAnswer(value);
                           setState(() {
-                            currentAnswer = value!;
+                            currentAnswer = value;
                           });
                           print(currentAnswer);
                         },
@@ -681,8 +675,8 @@ class _QuestionSelectOptionWidgetState
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  late final DatabaseReference quizDatabase;
-  late StreamSubscription<DatabaseEvent> _quizSubscription;
+  DatabaseReference? quizDatabase;
+  StreamSubscription<DatabaseEvent>? _quizSubscription;
 
   dynamic authenticatedUser;
   dynamic quizData;
@@ -697,8 +691,8 @@ class _MyHomePageState extends State<MyHomePage> {
     quizDatabase = FirebaseDatabase.instance.ref("quiz");
 
     try {
-      final quizSnapshot = await quizDatabase.get();
-      quizData = quizSnapshot.value;
+      final quizSnapshot = await quizDatabase?.get();
+      quizData = quizSnapshot?.value;
       // print(quizData);
       // for (var quiz in quizData.values) {
       //   print("DEBUG::??????????/");
@@ -708,7 +702,7 @@ class _MyHomePageState extends State<MyHomePage> {
       debugPrint(err.toString());
     }
 
-    _quizSubscription = quizDatabase.onValue.listen((DatabaseEvent event) {
+    _quizSubscription = quizDatabase?.onValue.listen((DatabaseEvent event) {
       print(event.type);
       print(event.snapshot.value);
       setState(() {
@@ -719,7 +713,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   void dispose() {
-    _quizSubscription.cancel();
+    _quizSubscription?.cancel();
     super.dispose();
   }
 
@@ -773,7 +767,7 @@ class _MyHomePageState extends State<MyHomePage> {
     Navigator.of(context).push(MaterialPageRoute<void>(
         builder: (context) => ConfigureQuizPage(
               quiz: null,
-              db: quizDatabase,
+              db: quizDatabase!,
             )));
   }
 
@@ -875,7 +869,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 crossAxisCount: 2,
                 childAspectRatio: 4,
                 children: List.generate(
-                  quizData.length,
+                  quizData.length ?? 0,
                   (index) {
                     Quiz quiz = Quiz.fromJson(
                         jsonDecode(quizData.values.elementAt(index)));
