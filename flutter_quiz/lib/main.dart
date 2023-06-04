@@ -31,11 +31,13 @@ class Option {
 
 class Question {
   String title;
+  String? image;
   String description;
   List<Option> options;
 
   Question({
     required this.title,
+    this.image,
     required this.description,
     required this.options,
   });
@@ -43,6 +45,7 @@ class Question {
   Map<String, dynamic> toJson() {
     return {
       'title': title,
+      'image': image,
       'description': description,
       'options': jsonEncode(options),
     };
@@ -56,6 +59,7 @@ class Question {
 
     return Question(
         title: json['title'] as String,
+        image: json['image'] as String?,
         description: json['description'] as String,
         options: options);
   }
@@ -135,6 +139,70 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
+class OptionField extends StatefulWidget {
+  OptionField(
+      {super.key,
+      required this.option,
+      required this.optionIndex,
+      required this.updateOption,
+      required this.removeOption});
+  Option option;
+  final int optionIndex;
+  final void Function(Option) updateOption;
+  final void Function(int) removeOption;
+  @override
+  State<OptionField> createState() => _OptionFieldState();
+}
+
+class _OptionFieldState extends State<OptionField> {
+  late TextEditingController _optionController;
+
+  @override
+  void initState() {
+    super.initState();
+    _optionController = TextEditingController(text: widget.option.title);
+  }
+
+  @override
+  void dispose() {
+    _optionController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _optionController,
+            onChanged: (value) {
+              widget.option.title = value;
+              widget.updateOption(widget.option);
+            },
+            decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              hintText: 'Opção',
+            ),
+          ),
+        ),
+        Checkbox(
+          value: widget.option.answer,
+          onChanged: (value) {
+            widget.option.answer = value ?? false;
+            widget.updateOption(widget.option);
+          },
+        ),
+        IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: () {
+              widget.removeOption(widget.optionIndex);
+            }),
+      ],
+    );
+  }
+}
+
 class QuestionCard extends StatefulWidget {
   QuestionCard(
       {super.key,
@@ -149,12 +217,14 @@ class QuestionCard extends StatefulWidget {
 }
 
 class _QuestionCardState extends State<QuestionCard> {
+  late TextEditingController _imageController;
   late TextEditingController _titleController;
   late TextEditingController _descriptionController;
 
   @override
   void initState() {
     super.initState();
+    _imageController = TextEditingController(text: widget.question.image);
     _titleController = TextEditingController(text: widget.question.title);
     _descriptionController =
         TextEditingController(text: widget.question.description);
@@ -162,6 +232,7 @@ class _QuestionCardState extends State<QuestionCard> {
 
   @override
   void dispose() {
+    _imageController.dispose();
     _titleController.dispose();
     _descriptionController.dispose();
     super.dispose();
@@ -173,7 +244,8 @@ class _QuestionCardState extends State<QuestionCard> {
         child: Column(children: [
       Flexible(
           flex: 10,
-          child: Column(
+          child: SingleChildScrollView(
+              child: Column(
             children: [
               const Text("Titulo"),
               TextField(
@@ -200,50 +272,43 @@ class _QuestionCardState extends State<QuestionCard> {
                   hintText: 'Descrição da Questão',
                 ),
               ),
+              const Text("URL de Imagem (opcional)"),
+              TextField(
+                controller: _imageController,
+                onChanged: (value) {
+                  widget.question.image = value;
+                  widget.updateQuestion(widget.question);
+                },
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  hintText: 'https://...',
+                ),
+              ),
               const Text("Opções"),
             ],
-          )),
+          ))),
       Flexible(
           flex: 12,
           child: SingleChildScrollView(
               child: Column(
                   children: List.generate(widget.question.options.length,
                       (optionIndex) {
-            var optionNumber = optionIndex + 1;
-            return Row(
-              children: [
-                Text("Opção $optionNumber"),
-                Expanded(
-                  child: TextField(
-                    controller: TextEditingController(
-                        text: widget.question.options[optionIndex].title),
-                    onChanged: (value) {
-                      widget.question.options[optionIndex].title = value;
-                      widget.updateQuestion(widget.question);
-                    },
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: 'Opção',
-                    ),
-                  ),
-                ),
-                Checkbox(
-                  value: widget.question.options[optionIndex].answer,
-                  onChanged: (value) {
-                    widget.question.options[optionIndex].answer =
-                        value ?? false;
-                    widget.updateQuestion(widget.question);
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.delete),
-                  onPressed: () {
-                    widget.question.options.removeAt(optionIndex);
-                    widget.updateQuestion(widget.question);
-                  },
-                ),
-              ],
-            );
+            print("OPTION AT $optionIndex");
+            print(widget.question.options[optionIndex].title);
+            return OptionField(
+                option: widget.question.options[optionIndex],
+                optionIndex: optionIndex,
+                updateOption: (option) {
+                  widget.question.options[optionIndex] = option;
+                  widget.updateQuestion(widget.question);
+                },
+                removeOption: (int removeIndex) {
+                  print("REMOVING OPTION AT $removeIndex");
+                  print(widget.question.options[removeIndex].title);
+
+                  widget.question.options.removeAt(removeIndex);
+                  widget.updateQuestion(widget.question);
+                });
           })))),
       Flexible(
           flex: 2,
@@ -253,7 +318,8 @@ class _QuestionCardState extends State<QuestionCard> {
               ElevatedButton(
                 onPressed: () {
                   widget.question.options.add(Option(
-                    title: "New Option",
+                    title: "Option nº" +
+                        (widget.question.options.length + 1).toString(),
                     answer: false,
                   ));
                   widget.updateQuestion(widget.question);
@@ -518,6 +584,7 @@ class _QuizAnswerPageState extends State<_QuizAnswerPage> {
             ),
             body: Center(
                 child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Text("Respostas enviadas com sucesso!"),
                 Text("Você acertou $correctAnswers de ${quiz.questions.length}",
@@ -562,7 +629,7 @@ class _QuizAnswerPageState extends State<_QuizAnswerPage> {
                 child: Column(
                   children: [
                     SizedBox(
-                      height: 700,
+                      height: 900,
                       child: ListView.builder(
                         itemCount: widget.quiz.questions.length,
                         itemBuilder: (context, questionIndex) {
@@ -650,6 +717,16 @@ class _QuestionSelectOptionWidgetState
             widget.question.options[currentAnswer ?? 0].title,
             style: Theme.of(context).textTheme.bodyLarge,
           ),
+          // display question image
+          (widget.question.image != null && widget.question.image != "")
+              ? Container(
+                  margin: const EdgeInsets.all(10),
+                  child: Image.network(
+                    widget.question.image!,
+                    height: 200,
+                  ),
+                )
+              : Container(),
           Column(
               children: List.generate(
                   widget.question.options.length,
@@ -679,7 +756,9 @@ class _MyHomePageState extends State<MyHomePage> {
   StreamSubscription<DatabaseEvent>? _quizSubscription;
 
   dynamic authenticatedUser;
-  dynamic quizData;
+  dynamic quizData = {};
+
+  String quizQuery = "";
 
   @override
   void initState() {
@@ -693,11 +772,6 @@ class _MyHomePageState extends State<MyHomePage> {
     try {
       final quizSnapshot = await quizDatabase?.get();
       quizData = quizSnapshot?.value;
-      // print(quizData);
-      // for (var quiz in quizData.values) {
-      //   print("DEBUG::??????????/");
-      //   print(quiz);
-      // }
     } catch (err) {
       debugPrint(err.toString());
     }
@@ -774,6 +848,38 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     signInWithGoogle();
+
+    if (authenticatedUser == null) {
+      return Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text("Você precisa estar logado para acessar o app"),
+              ElevatedButton(
+                onPressed: signInWithGoogle,
+                child: const Text("Logar com o Google"),
+              )
+            ],
+          ),
+        ),
+      );
+    }
+
+    List<Quiz> quizDataParsed = [];
+
+    for (var quiz in quizData.values) {
+      Quiz parsedQuiz = Quiz.fromJson(jsonDecode(quiz));
+      if (quizQuery != "") {
+        if (!parsedQuiz.title.toLowerCase().contains(quizQuery.toLowerCase()) &&
+            !parsedQuiz.description
+                .toLowerCase()
+                .contains(quizQuery.toLowerCase())) continue;
+      }
+
+      quizDataParsed.add(parsedQuiz);
+    }
+
     // This method is rerun every time setState is called.
     return Scaffold(
       appBar: AppBar(
@@ -825,18 +931,23 @@ class _MyHomePageState extends State<MyHomePage> {
                 color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.search),
+                  const Icon(Icons.search),
                   Expanded(
                     child: TextField(
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         // grey color
                         filled: true,
                         fillColor: Colors.white,
                         border: OutlineInputBorder(),
                         hintText: 'Pesquisar',
                       ),
+                      onSubmitted: (String value) {
+                        setState(() {
+                          quizQuery = value;
+                        });
+                      },
                     ),
                   ),
                 ],
@@ -844,20 +955,27 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             // Below, add the title "Navegue pela biblioteca".
             Container(
-              margin: const EdgeInsets.all(10),
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surface,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Text(
-                'Navegue pela biblioteca',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
+                margin: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: BorderRadius.circular(10),
                 ),
-              ),
-            ),
+                child: Column(
+                  children: [
+                    Text(
+                      "Bem vindo, ${authenticatedUser.displayName}!",
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
+                    const Text(
+                      'Navegue pela biblioteca',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                )),
             // List of cards (widgets) distributed in rows, displayed side by side responsively in a GridView.
             // The cards are fetched from the _quiz_db variable in a "for" loop.
             // each of the cards should have a rectangular shape with medium size, white background and rounded corners.
@@ -869,10 +987,9 @@ class _MyHomePageState extends State<MyHomePage> {
                 crossAxisCount: 2,
                 childAspectRatio: 4,
                 children: List.generate(
-                  quizData.length ?? 0,
+                  quizDataParsed.length,
                   (index) {
-                    Quiz quiz = Quiz.fromJson(
-                        jsonDecode(quizData.values.elementAt(index)));
+                    Quiz quiz = quizDataParsed.elementAt(index);
 
                     return GestureDetector(
                         onTap: () => Navigator.push(
@@ -911,8 +1028,9 @@ class _MyHomePageState extends State<MyHomePage> {
                                     ),
                                     Text(
                                       quiz.description,
-                                      style:
-                                          Theme.of(context).textTheme.bodyText1,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium,
                                     ),
                                   ],
                                 ),
