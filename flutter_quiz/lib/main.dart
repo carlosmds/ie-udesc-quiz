@@ -629,7 +629,7 @@ class _QuizAnswerPageState extends State<_QuizAnswerPage> {
                 child: Column(
                   children: [
                     SizedBox(
-                      height: 900,
+                      height: 780,
                       child: ListView.builder(
                         itemCount: widget.quiz.questions.length,
                         itemBuilder: (context, questionIndex) {
