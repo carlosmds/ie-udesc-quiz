@@ -868,7 +868,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     List<Quiz> quizDataParsedX = [];
 
-    for (var quiz in quizData.values.reversed.) {
+    for (var quiz in quizData.values) {
       Quiz parsedQuiz = Quiz.fromJson(jsonDecode(quiz));
       if (quizQuery != "") {
         if (!parsedQuiz.title.toLowerCase().contains(quizQuery.toLowerCase()) &&
