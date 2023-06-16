@@ -866,9 +866,9 @@ class _MyHomePageState extends State<MyHomePage> {
       );
     }
 
-    List<Quiz> quizDataParsed = [];
+    List<Quiz> quizDataParsedX = [];
 
-    for (var quiz in quizData.values) {
+    for (var quiz in quizData.values.reversed.) {
       Quiz parsedQuiz = Quiz.fromJson(jsonDecode(quiz));
       if (quizQuery != "") {
         if (!parsedQuiz.title.toLowerCase().contains(quizQuery.toLowerCase()) &&
@@ -877,8 +877,10 @@ class _MyHomePageState extends State<MyHomePage> {
                 .contains(quizQuery.toLowerCase())) continue;
       }
 
-      quizDataParsed.add(parsedQuiz);
+      quizDataParsedX.add(parsedQuiz);
     }
+
+    List<Quiz> quizDataParsed = quizDataParsedX.reversed.toList();
 
     // This method is rerun every time setState is called.
     return Scaffold(
